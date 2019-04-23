@@ -23,7 +23,7 @@ class Model1(nn.Module):
     """
 
     def __init__(self, num_users, num_items, model_args):
-        super(Caser, self).__init__()
+        super(Model1, self).__init__()
         self.args = model_args
 
         # init args
