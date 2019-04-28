@@ -32,11 +32,13 @@ class Model2(nn.Module):
         m=self.args.d
         L = self.args.L
         dims = self.args.d
+        self.n_l = self.args.n_l
         self.n_h = self.args.nh
         self.n_v = self.args.nv
         self.drop_ratio = self.args.drop
         self.ac_conv = activation_getter[self.args.ac_conv]
         self.ac_fc = activation_getter[self.args.ac_fc]
+        self.conv_gate = activation_getter['sigm']
 
         # user and item embeddings
         self.user_embeddings = nn.Embedding(num_users, dims)
@@ -46,7 +48,7 @@ class Model2(nn.Module):
 
         # horizontal conv layer
         lengths = [i + 1 for i in range(L)]
-        self.conv_h = nn.ModuleList([nn.Conv2d(1, self.n_h, (i, dims)) for i in lengths])
+        self.conv_h = nn.ModuleList([nn.Conv2d(1, m, (i, dims)) for i in lengths])
 
         # fully-connected layer
         self.fc1_dim_v = self.n_v * dims
@@ -55,7 +57,7 @@ class Model2(nn.Module):
         # W1, b1 can be encoded with nn.Linear
         self.fc1 = nn.Linear(dims+dims, dims)
         # W2, b2 are encoded with nn.Embedding, as we don't need to compute scores for all items
-        self.W2 = nn.Embedding(num_items, dims+dims)
+        self.W2 = nn.Embedding(num_items, dims)
         self.b2 = nn.Embedding(num_items, 1)
 
         # dropout
@@ -96,22 +98,26 @@ class Model2(nn.Module):
         
         # horizontal conv layer
         out_hs = list()
-        o = torch.zeros(list(item_embs.size()[0]),self.args.d)
+        o = torch.zeros(list(item_embs.size())[0],self.args.d)
         for j in range(self.args.L):
             conv=self.conv_h[j]
-            for i in range(self.args.d):
-                paddedemb =  torch.zeros(list(item_embs.size())[0],i+list(item_embs.size())[1],list(item_embs.size()[2]))
-                paddedemb[:,i:,:]=item_embs[:,:,:]
-                conv_out = self.ac_conv(conv(paddedemb).squeeze(3))
-                out_hs.append(conv_out)
-            out_h = torch.cat(out_hs, 2)  # prepare for fully connect
+            # for i in range(self.args.d):
+             
+            paddedemb =  torch.zeros(list(item_embs.size())[0],1,j+list(item_embs.size())[2],list(item_embs.size())[3])
+            paddedemb[:,:,j:,:]=item_embs[:,:,:,:]
+            conv_out = self.ac_conv(conv(paddedemb).squeeze(3))
+            out_hs.append(conv_out)
+            out_h = self.conv_gate(conv_out) #torch.cat(out_hs, 2)  # prepare for fully connect
 
-            f = out_h.permute(1,0,2)
-            x=item_embs.permute(1,0,2)
+            f = out_h.permute(2,0,1)
+            x=item_embs.squeeze(1).permute(1,0,2)
             # for i in range()
-            h = ForgetMult()(f,x,None,False)
+            xprev = x
+            for i in range(self.n_l):
+                h = ForgetMult()(f,xprev,None,False)
+                xprev = h
 
-            hw = torch.sum(h,dim=2)
+            hw = torch.sum(h,dim=0)
             o += hw
 
 
@@ -124,7 +130,7 @@ class Model2(nn.Module):
         out = self.dropout(x)
 
         # fully-connected layer
-        z = self.ac_fc(self.fc1(out))
+        z = (self.fc1(out))
 
         w2 = self.W2(item_var)
         b2 = self.b2(item_var)
@@ -132,8 +138,8 @@ class Model2(nn.Module):
         if for_pred:
             w2 = w2.squeeze()
             b2 = b2.squeeze()
-            res = (x * w2).sum(1) + b2
+            res = (z * w2).sum(1) + b2
         else:
-            res = torch.baddbmm(b2, w2, x.unsqueeze(2)).squeeze()
+            res = torch.baddbmm(b2, w2, z.unsqueeze(2)).squeeze()
 
         return res
