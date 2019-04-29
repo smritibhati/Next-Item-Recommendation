@@ -30,5 +30,5 @@ for i in userset:
 # df_xtrain  = pd.DataFrame(df_xtrain)
 # df_xtest = pd.DataFrame(df_xtest)
 
-dftrain.to_csv('train.csv')
-dftest.to_csv('test.csv')
+dftrain.to_csv('train.csv', sep=' ', index=False)
+dftest.to_csv('test.csv', sep=' ', index=False)
