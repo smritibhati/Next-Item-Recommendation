@@ -4,7 +4,7 @@ from time import time
 import torch.optim as optim
 from torch.autograd import Variable
 
-from caser import Caser
+# from caser import Caser
 from evaluation import evaluate_ranking
 from interactions2 import Interactions2
 from utils import *
@@ -282,8 +282,8 @@ class Recommender(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # data arguments
-    parser.add_argument('--train_root', type=str, default='datasets/ml1m/test/train.txt')
-    parser.add_argument('--test_root', type=str, default='datasets/ml1m/test/test.txt')
+    parser.add_argument('--train_root', type=str, default='train.csv')
+    parser.add_argument('--test_root', type=str, default='test.csv')
     parser.add_argument('--L', type=int, default=5)
     parser.add_argument('--T', type=int, default=3)
     # train arguments

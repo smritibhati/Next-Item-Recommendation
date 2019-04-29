@@ -302,8 +302,8 @@ if __name__ == '__main__':
     model_parser.add_argument('--nv', type=int, default=4)
     model_parser.add_argument('--nh', type=int, default=16)
     model_parser.add_argument('--drop', type=float, default=0.1)
-    model_parser.add_argument('--ac_conv', type=str, default='tanh')
-    model_parser.add_argument('--ac_fc', type=str, default='sigm')
+    model_parser.add_argument('--ac_conv', type=str, default='sigm')
+    model_parser.add_argument('--ac_fc', type=str, default='relu')
 
     model_config = model_parser.parse_args()
     model_config.L = config.L
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     # df['item_id']= df.apply(lambda row : itemdict[row.itemid],axis=1)
     # df = df.drop(columns=['userid','itemid'])
 
-    filename = 'code/baby_pruned_1.csv'
+    filename = 'baby_pruned_2.csv'
     df = pd.read_csv(filename)
     # df.columns = ['idx','rating','timestamp','userid','itemid']
 
