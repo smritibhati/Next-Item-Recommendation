@@ -134,7 +134,7 @@ class Model2(nn.Module):
 
         # Fully-connected Layers
         
-        x = torch.cat([o, user_emb,out_v], 1)
+        x = torch.cat([o, user_emb], 1)
         # x = torch.cat([o, user_emb], 1)
         
         # apply dropout
