@@ -44,7 +44,8 @@ class Model2(nn.Module):
         self.user_embeddings = nn.Embedding(num_users, dims)
         self.item_embeddings = nn.Embedding(num_items, dims)
 
-        
+        # vertical conv layer
+        self.conv_v = nn.Conv2d(1, self.n_v, (L, 1))
 
         # horizontal conv layer
         lengths = [i + 1 for i in range(L)]
@@ -96,6 +97,11 @@ class Model2(nn.Module):
         # Convolutional Layers
         out, out_h, out_v = None, None, None
         
+        if self.n_v:
+            out_v = self.conv_v(item_embs)
+            out_v = out_v.view(-1, self.args.d)  # prepare for fully connect
+
+
         # horizontal conv layer
         out_hs = list()
         o = torch.zeros(list(item_embs.size())[0],self.args.d)
@@ -107,7 +113,8 @@ class Model2(nn.Module):
             paddedemb[:,:,j:,:]=item_embs[:,:,:,:]
             conv_out = self.ac_conv(conv(paddedemb).squeeze(3))
             out_hs.append(conv_out)
-            out_h = self.conv_gate(conv_out) #torch.cat(out_hs, 2)  # prepare for fully connect
+            out_h = conv_out #torch.cat(out_hs, 2)  # prepare for fully connect
+
 
             f = out_h.permute(2,0,1)
             x=item_embs.squeeze(1).permute(1,0,2)
@@ -116,7 +123,10 @@ class Model2(nn.Module):
             for i in range(self.n_l):
                 h = ForgetMult()(f,xprev,None,False)
                 xprev = h
-
+            
+            
+            #heirarchical aggregation
+            
             hw = torch.sum(h,dim=0)
             o += hw
 
@@ -124,7 +134,8 @@ class Model2(nn.Module):
 
         # Fully-connected Layers
         
-        x = torch.cat([o, user_emb], 1)
+        x = torch.cat([o, user_emb,out_v], 1)
+        # x = torch.cat([o, user_emb], 1)
         
         # apply dropout
         out = self.dropout(x)

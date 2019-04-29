@@ -282,8 +282,6 @@ class Recommender(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # data arguments
-    parser.add_argument('--train_root', type=str, default='datasets/ml1m/test/train.txt')
-    parser.add_argument('--test_root', type=str, default='datasets/ml1m/test/test.txt')
     parser.add_argument('--L', type=int, default=5)
     parser.add_argument('--T', type=int, default=3)
     # train arguments
@@ -303,9 +301,9 @@ if __name__ == '__main__':
     model_parser.add_argument('--n_l',type=int,default=4)
     model_parser.add_argument('--nv', type=int, default=4)
     model_parser.add_argument('--nh', type=int, default=16)
-    model_parser.add_argument('--drop', type=float, default=0.5)
-    model_parser.add_argument('--ac_conv', type=str, default='relu')
-    model_parser.add_argument('--ac_fc', type=str, default='relu')
+    model_parser.add_argument('--drop', type=float, default=0.1)
+    model_parser.add_argument('--ac_conv', type=str, default='tanh')
+    model_parser.add_argument('--ac_fc', type=str, default='sigm')
 
     model_config = model_parser.parse_args()
     model_config.L = config.L
@@ -326,7 +324,7 @@ if __name__ == '__main__':
     # df['item_id']= df.apply(lambda row : itemdict[row.itemid],axis=1)
     # df = df.drop(columns=['userid','itemid'])
 
-    filename = 'baby_pruned_1.csv'
+    filename = 'code/baby_pruned_1.csv'
     df = pd.read_csv(filename)
     # df.columns = ['idx','rating','timestamp','userid','itemid']
 
